@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>繞口令抽籤產生器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .difficulty-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+        .level-1 { background-color: #dbeafe; color: #1e40af; }
+        .level-2 { background-color: #d1fae5; color: #065f46; }
+        .level-3 { background-color: #fef3c7; color: #92400e; }
+        .level-4 { background-color: #fee2e2; color: #991b1b; }
+        .level-5 { background-color: #e5e7eb; color: #1f2937; border: 1px solid #1f2937;}
+        
+        #tongue-twister-text {
+            transition: font-size 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl mx-auto p-6 md:p-8 bg-white rounded-2xl shadow-lg">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800">繞口令挑戰</h1>
+            <p class="text-gray-500 mt-2">點擊按鈕，抽出你的今日挑戰！</p>
+        </header>
+
+        <main>
+            <div id="result-container" class="bg-gray-50 p-6 rounded-lg min-h-[200px] flex flex-col justify-center items-center text-center transition-all duration-300">
+                <div id="difficulty-display" class="mb-4 h-8"></div>
+                <div class="flex items-start justify-center gap-2">
+                    <p id="tongue-twister-text" class="text-lg md:text-xl text-gray-700 leading-relaxed">準備好就按下「抽籤」按鈕吧！</p>
+                    <button id="speak-button" class="hidden text-gray-500 hover:text-blue-600 transition-colors flex-shrink-0 mt-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-4 flex flex-wrap justify-center items-center gap-4 text-gray-600">
+                <!-- Font size controls -->
+                <div class="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                    <button id="font-decrease" class="p-2 rounded-md hover:bg-gray-200">-</button>
+                    <span class="font-semibold text-sm">字體</span>
+                    <button id="font-increase" class="p-2 rounded-md hover:bg-gray-200">+</button>
+                </div>
+                <!-- Fullscreen button -->
+                <button id="fullscreen-button" class="flex items-center gap-2 bg-gray-100 rounded-lg p-2 hover:bg-gray-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 1v4m0 0h-4m4 0l-5-5" />
+                    </svg>
+                    <span class="font-semibold text-sm">全螢幕</span>
+                </button>
+            </div>
+
+            <div class="mt-6">
+                <button id="draw-button" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200 transform hover:scale-105 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 002 2h3a2 2 0 002-2v-3a2 2 0 00-2-2H5zM15 12a2 2 0 00-2 2v3a2 2 0 002 2h3a2 2 0 002-2v-3a2 2 0 00-2-2h-3z" /></svg>
+                    <span id="draw-button-text">抽個挑戰！</span>
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const tongueTwisters = [
+            // Data remains the same
+            { text: "和尚端湯上塔，塔滑湯灑湯燙塔。", difficulty: "第一級：入門級", level: 1 }, { text: "吃葡萄不吐葡萄皮，不吃葡萄倒吐葡萄皮。", difficulty: "第一級：入門級", level: 1 }, { text: "牆上一個窗，窗上一支槍，槍瞄狼。", difficulty: "第一級：入門級", level: 1 }, { text: "媽媽騎馬，馬慢，媽媽罵馬。", difficulty: "第一級：入門級", level: 1 }, { text: "老方扛著個黃幌子，老黃扛著個方幌子。", difficulty: "第一級：入門級", level: 1 }, { text: "一平盆面，烙一平盆餅，餅碰盆，盆碰餅。", difficulty: "第一級：入門級", level: 1 }, { text: "紅鳳凰，粉鳳凰，紅粉鳳凰花鳳凰。", difficulty: "第一級：入門級", level: 1 }, { text: "扁擔長，板凳寬，扁擔沒有板凳寬，板凳沒有扁擔長。", difficulty: "第一級：入門級", level: 1 }, { text: "黑化肥發灰，灰化肥發黑。", difficulty: "第二級：基礎級", level: 2 }, { text: "八百標兵奔北坡，砲兵並排北邊跑，砲兵怕把標兵碰，標兵怕碰砲兵砲。", difficulty: "第二級：基礎級", level: 2 }, { text: "山前有個崔粗腿，山後有個崔腿粗，二人山前來比腿，不知是崔粗腿的腿粗，還是崔腿粗的腿粗。", difficulty: "第二級：基礎級", level: 2 }, { text: "石獅寺有四十四隻石獅子。", difficulty: "第二級：基礎級", level: 2 }, { text: "你會燉我的燉凍豆腐，你來燉我的燉凍豆腐；你不會燉我的燉凍豆腐，別胡燉亂燉我的燉凍豆腐。", difficulty: "第二級：基礎級", level: 2 }, { text: "大兔子，大肚子，大兔子的大肚子，大肚子的大兔子。", difficulty: "第二級：基礎級", level: 2 }, { text: "山前有個顏圓眼，山後有個顏眼圓，不知是顏圓眼的眼圓，還是顏眼圓的眼圓。", difficulty: "第二級：基礎級", level: 2 }, { text: "司機買雌雞，廚師買瓷器。", difficulty: "第二級：基礎級", level: 2 }, { text: "四是四，十是十，十四是十四，四十是四十；莫把四字說成十字音，莫把十字說成四字音。", difficulty: "第三級：進階級", level: 3 }, { text: "哥挎瓜筐過寬溝，過溝筐漏瓜滾溝。", difficulty: "第三級：進階級", level: 3 }, { text: "抱著灰雞上飛機，飛機起飛，灰雞要飛。", difficulty: "第三級：進階級", level: 3 }, { text: "高高山上一根藤，藤條頭上掛銅鈴，風吹藤動銅鈴動，風停藤停銅鈴停。", difficulty: "第三級：進階級", level: 3 }, { text: "有個小孩叫小杜，上街打醋又買布。買了布，打了醋，回頭看見鷹抓兔。放下布，擱下醋，上前去追鷹和兔。飛了鷹，跑了兔，灑了醋，濕了布。", difficulty: "第三級：進階級", level: 3 }, { text: "牛郎戀劉娘，劉娘念牛郎，牛郎牛年娶劉娘，劉娘年年念牛郎。", difficulty: "第三級：進階級", level: 3 }, { text: "白石塔，白石搭，白石搭白塔，白塔白石搭，搭好白石塔，石塔白又大。", difficulty: "第三級：進階級", level: 3 }, { text: "一個胖娃娃，抓了三個大花活蛤蟆，三個胖娃娃，抓了一個大花活蛤蟆。", difficulty: "第三級：進階級", level: 3 }, { text: "紅鯉魚與綠鯉魚與驢。", difficulty: "第四級：困難級", level: 4 }, { text: "老龍惱怒鬧老農，老農惱怒鬧老龍。農怒龍惱農更怒，龍惱農怒龍怕農。", difficulty: "第四級：困難級", level: 4 }, { text: "石室詩士施氏，嗜獅，誓食十獅。施氏時時適市視獅。十時，適十獅適市。是時，適施氏適市。", difficulty: "第四級：困難級", level: 4 }, { text: "門外有四輛四輪大馬車，你愛拉哪兩輛就拉哪兩輛。", difficulty: "第四級：困難級", level: 4 }, { text: "七巷一個漆匠，西巷一個錫匠。七巷漆匠用了西巷錫匠的錫，西巷錫匠拿了七巷漆匠的漆，七巷漆匠氣西巷錫匠用了漆，西巷錫匠譏七巷漆匠拿了錫。", difficulty: "第四級：困難級", level: 4 }, { text: "蔣家羊，楊家牆，蔣家羊撞倒了楊家牆，楊家牆壓死了蔣家羊，楊家要蔣家賠牆，蔣家要楊家賠羊。", difficulty: "第四級：困難級", level: 4 }, { text: "調到敵島打特盜，特盜太刁投短刀。擋推頂打短刀掉，踏盜得刀盜打倒。", difficulty: "第四級：困難級", level: 4 }, { text: "燉凍豆腐得篤篤篤，燉燙豆腐得燙燙燙，不篤不燉凍豆腐，不燙不燉燙豆腐。", difficulty: "第四級：困難級", level: 4 }, { text: "季姬寂，集雞，雞即棘雞。棘雞飢嘰，季姬及箕稷濟雞。", difficulty: "第五級：魔王級", level: 5 }, { text: "老羅拉了一車梨，老李拉了一車栗。老羅的梨比老李的栗大，老李的栗比老羅的梨脆。老羅分給老李一個梨，老李分給老羅一顆栗。", difficulty: "第五級：魔王級", level: 5 }, { text: "南港展覽館館長晚上趕場，幫忙南山廣場場方把鋼彈跟單槓，搬到南港展覽館辦場鋼彈觀光展，看鋼彈吊單槓往上。", difficulty: "第五級：魔王級", level: 5 }, { text: "譚家譚老漢，挑擔到蛋攤，買蛋、換彈，回家看看，看看蛋，彈彈彈。蛋彈、彈蛋，彈到蛋攤換雞蛋。", difficulty: "第五級：魔王級", level: 5 }, { text: "氫鋰鈉鉀銣銫鍅，鈹鎂鈣鍶鋇鐳，硼鋁鎵銦鉈，碳矽鍺錫鉛，氮磷砷銻鉍，氧硫硒碲釙，氟氯溴碘砈，氦氖氬氪氙氡。", difficulty: "第五級：魔王級", level: 5 }, { text: "喇嘛與啞巴，打南邊來個喇嘛，手裡提拉著五斤鎝嘛。打北邊來個啞巴，腰裡別著個喇叭...", difficulty: "第五級：魔王級", level: 5 }, { text: "巴老爺有八十八棵芭蕉樹，來了八十八個把式要在巴老爺八十八棵芭蕉樹下住...", difficulty: "第五級：魔王級", level: 5 }, { text: "鵝要過河，河要渡鵝，不知是鵝過河，還是河渡鵝，鵝過河，河渡鵝...", difficulty: "第五級：魔王級", level: 5 },
+        ];
+
+        const drawButton = document.getElementById('draw-button');
+        const drawButtonText = document.getElementById('draw-button-text');
+        const tongueTwisterTextElem = document.getElementById('tongue-twister-text');
+        const difficultyDisplayElem = document.getElementById('difficulty-display');
+        const resultContainer = document.getElementById('result-container');
+        const speakButton = document.getElementById('speak-button');
+        const fontIncreaseBtn = document.getElementById('font-increase');
+        const fontDecreaseBtn = document.getElementById('font-decrease');
+        const fullscreenBtn = document.getElementById('fullscreen-button');
+        
+        let lastRandomIndex = -1;
+        let animationInterval;
+        let currentFontSize = 1.25; // in rem, matches md:text-xl
+        let synth;
+
+        // Initialize sound synth on first user interaction
+        const initAudio = () => {
+            if (!synth) {
+                synth = new Tone.PolySynth(Tone.Synth, {
+                    oscillator: { type: "sine" },
+                    envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 }
+                }).toDestination();
+            }
+        };
+        document.body.addEventListener('click', initAudio, { once: true });
+
+
+        drawButton.addEventListener('click', () => {
+            if (drawButton.disabled) return;
+            Tone.start(); // Ensure audio context is running
+
+            // Stop any ongoing speech
+            speechSynthesis.cancel();
+
+            drawButton.disabled = true;
+            drawButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            drawButton.classList.add('bg-gray-400', 'cursor-not-allowed');
+            drawButtonText.textContent = '抽籤中...';
+
+            speakButton.classList.add('hidden');
+            tongueTwisterTextElem.textContent = '...';
+            difficultyDisplayElem.innerHTML = '';
+            
+            const animationDuration = 2500;
+            const shuffleSpeed = 80;
+
+            // Sound effect
+            const notes = ["C4", "E4", "G4", "A4", "G4", "E4"];
+            let noteIndex = 0;
+            const soundInterval = setInterval(() => {
+                if(synth) {
+                    synth.triggerAttackRelease(notes[noteIndex % notes.length], "16n");
+                    noteIndex++;
+                }
+            }, 120);
+
+            animationInterval = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * tongueTwisters.length);
+                const randomTwister = tongueTwisters[randomIndex];
+                tongueTwisterTextElem.textContent = randomTwister.text;
+                difficultyDisplayElem.innerHTML = `<span class="difficulty-badge level-${randomTwister.level}" style="opacity: 0.5;">${randomTwister.difficulty}</span>`;
+            }, shuffleSpeed);
+
+            setTimeout(() => {
+                clearInterval(animationInterval);
+                clearInterval(soundInterval);
+
+                let finalIndex;
+                do {
+                    finalIndex = Math.floor(Math.random() * tongueTwisters.length);
+                } while (finalIndex === lastRandomIndex);
+                
+                lastRandomIndex = finalIndex;
+                const selected = tongueTwisters[finalIndex];
+
+                resultContainer.classList.remove('fade-in');
+                void resultContainer.offsetWidth;
+                resultContainer.classList.add('fade-in');
+
+                tongueTwisterTextElem.textContent = selected.text;
+                difficultyDisplayElem.innerHTML = `<span class="difficulty-badge level-${selected.level}">${selected.difficulty}</span>`;
+                speakButton.classList.remove('hidden');
+
+                if(synth) { // Play a final "win" sound
+                    synth.triggerAttackRelease("C5", "8n", Tone.now());
+                }
+
+                drawButton.disabled = false;
+                drawButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                drawButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                drawButtonText.textContent = '再抽一次！';
+            }, animationDuration);
+        });
+
+        // Text-to-Speech
+        speakButton.addEventListener('click', () => {
+            if ('speechSynthesis' in window) {
+                speechSynthesis.cancel(); // Stop previous speech
+                const textToSpeak = tongueTwisterTextElem.textContent;
+                const utterance = new SpeechSynthesisUtterance(textToSpeak);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 0.9;
+                speechSynthesis.speak(utterance);
+            } else {
+                alert('抱歉，您的瀏覽器不支援語音朗讀功能。');
+            }
+        });
+        
+        // Font Size Controls
+        const updateFontSize = () => {
+            tongueTwisterTextElem.style.fontSize = `${currentFontSize}rem`;
+        };
+
+        fontIncreaseBtn.addEventListener('click', () => {
+            if (currentFontSize < 3) { // Max size
+                currentFontSize += 0.1;
+                updateFontSize();
+            }
+        });
+
+        fontDecreaseBtn.addEventListener('click', () => {
+            if (currentFontSize > 0.8) { // Min size
+                currentFontSize -= 0.1;
+                updateFontSize();
+            }
+        });
+
+        // Fullscreen Control
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`無法進入全螢幕模式: ${err.message} (${err.name})`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+    </script>
+</body>
+</html>
+
+
